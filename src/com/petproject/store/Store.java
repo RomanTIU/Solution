@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 public class Store {
@@ -25,14 +26,14 @@ public class Store {
      */
     int storeSize = 100;
 
-    public void openStore() {
-        SellersService.inviteSellers(sellers, 1);
+    public void openStore() throws ExecutionException, InterruptedException {
+        SellersService.inviteSellers(sellers, 1002);
         BuyerService.inviteNewBuyers(buyers, storeSize);
         log.info("Store is open");
         startTrading();
     }
 
-    private void startTrading() {
+    private void startTrading() throws ExecutionException, InterruptedException {
         log.info("Start trading");
         while(true) {
             stall.trade(buyers);
