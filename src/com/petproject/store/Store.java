@@ -27,7 +27,7 @@ public class Store {
     int storeSize = 100;
 
     public void openStore() throws ExecutionException, InterruptedException {
-        SellersService.inviteSellers(sellers, 1002);
+        SellersService.inviteSellers(sellers, 1);
         BuyerService.inviteNewBuyers(buyers, storeSize);
         log.info("Store is open");
         startTrading();

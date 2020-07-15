@@ -4,10 +4,7 @@ import com.petproject.store.services.StorePerformanceService;
 
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -25,22 +22,29 @@ public class Stall {
     }
 
 
-    public void trade(Queue<Buyer> buyers) {
-        Thread job = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (buyers.size() > 0)
-                for (Seller s : sellers){
-                    s.serveTheBuyer(buyers.poll());
-                    servedBuyers.incrementAndGet();
-                }
-            }
-        });
+    public void trade(Queue<Buyer> buyers) throws InterruptedException {
         servedBuyers.set(0);
         performanceService.startServeBuyers();
-        sellers.get(0).serveTheBuyer(buyers.poll());
+//        Callable<Boolean> help = ()->{
+//            synchronized (buyers){
+//                sellers.stream().forEach(seller -> seller.serveTheBuyer(buyers.poll()));
+//                servedBuyers.incrementAndGet();
+//            }
+//      return true;  };
+        ExecutorService service = Executors.newFixedThreadPool(100); //Число допустимых тредов в 1 пуле
 
-        job.start();
+        for (int i = 0; i < 100; i++) {                                        //Число созданых тредов
+            service.submit(()->{
+                    sellers.stream().forEach(seller -> seller.serveTheBuyer(buyers.poll()));
+                    servedBuyers.incrementAndGet();
+                                    return true;  });
+        }
+        service.shutdown();
+        service.awaitTermination(1,TimeUnit.SECONDS);                   // Время сколько ждёт 1 пул до завершения в секундах
+
+
+
+//
 
         log.info(performanceService.checkPerformance(servedBuyers.get()));
     }
